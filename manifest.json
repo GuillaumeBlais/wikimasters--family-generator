@@ -1,0 +1,40 @@
+{
+  "manifest_version": 2,
+  "name": "WikiMasters – Générateur de familles",
+  "version": "1.8.1",
+  "description": "Thème → liste d'articles Wikipédia → code Famille pour l'extension WikiMastersTools-kzfamily.",
+  "permissions": [
+    "activeTab",
+    "https://*.wikipedia.org/*",
+    "https://cyrxjeppjqsxxjayfrur.supabase.co/*"
+  ],
+  "background": {
+    "scripts": [
+      "background.js"
+    ]
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://wiki-masters.com/*",
+        "https://www.wiki-masters.com/*"
+      ],
+      "js": [
+        "common.js",
+        "content.js",
+        "prices.js",
+        "autotag.js"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "wm-famille-generateur@local",
+      "strict_min_version": "109.0"
+    }
+  },
+  "browser_action": {
+    "default_title": "Générateur de familles WikiMasters"
+  }
+}
