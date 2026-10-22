@@ -61,5 +61,27 @@
     return { apikey: SB_ANON, authorization: `Bearer ${session.token}`, accept: 'application/json', ...extra };
   }
 
-  globalThis.WMFG = { sleep, pageFetch, humanDelay, AVG_DELAY_MS, SB_URL, SB_ANON, UUID, readSession, sbHeaders };
+  // Cache de prix de kzfamily : son préfixe change selon sa version (wm_avg_v3_, wm_avg_v4_…).
+  // Le préfixe actif est celui qui contient l'entrée la plus récente (kzfamily y écrit en continu).
+  const PRICE_PREFIXES = ['wm_avg_v4_', 'wm_avg_v3_'];
+  let activePrefix = null;
+  let activePrefixAt = 0;
+  function pricePrefix() {
+    if (activePrefix && Date.now() - activePrefixAt < 60000) return activePrefix;
+    const newest = {};
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const k = localStorage.key(i) || '';
+      const prefix = PRICE_PREFIXES.find((p) => k.startsWith(p));
+      if (!prefix) continue;
+      let at = 0;
+      try { at = JSON.parse(localStorage.getItem(k) || 'null')?.fetchedAt || 0; } catch (_) {}
+      if (at > (newest[prefix] || 0)) newest[prefix] = at;
+    }
+    activePrefix = PRICE_PREFIXES.reduce((best, p) => ((newest[p] || 0) > (newest[best] || 0) ? p : best), PRICE_PREFIXES[0]);
+    if (!newest[activePrefix]) activePrefix = PRICE_PREFIXES.find((p) => newest[p] !== undefined) || PRICE_PREFIXES[0];
+    activePrefixAt = Date.now();
+    return activePrefix;
+  }
+
+  globalThis.WMFG = { sleep, PRICE_PREFIXES, pricePrefix, pageFetch, humanDelay, AVG_DELAY_MS, SB_URL, SB_ANON, UUID, readSession, sbHeaders };
 })();

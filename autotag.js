@@ -46,8 +46,7 @@
     for (const [r, v] of Object.entries(json?.summary || {})) {
       if (v?.average !== null && v?.average !== '' && Number.isFinite(Number(v?.average))) averages[r] = Number(v.average);
     }
-    let prefix = PRICE_PREFIXES[0];
-    for (let i = 0; i < localStorage.length; i += 1) if (localStorage.key(i)?.startsWith('wm_avg_v3_')) { prefix = 'wm_avg_v3_'; break; }
+    const prefix = globalThis.WMFG.pricePrefix();
     try {
       localStorage.setItem(prefix + card.id, JSON.stringify({ ok: true, fetchedAt: Date.now(), averages, title: json?.wikipedia_title || null, retryAfterMs: null }));
     } catch (_) {}

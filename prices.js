@@ -8,14 +8,7 @@
   const FAMILIES_KEY = 'wm_families_v1';
   // Le préfixe du cache de prix dépend de la version de kzfamily installée (v3, v4…)
   const PRICE_PREFIXES = ['wm_avg_v4_', 'wm_avg_v3_'];
-  function writePrefix() {
-    for (const prefix of PRICE_PREFIXES) {
-      for (let i = 0; i < localStorage.length; i += 1) {
-        if (localStorage.key(i)?.startsWith(prefix)) return prefix;
-      }
-    }
-    return PRICE_PREFIXES[0];
-  }
+  const writePrefix = () => globalThis.WMFG.pricePrefix();
   const { humanDelay, SB_URL, UUID, readSession, sbHeaders } = globalThis.WMFG;
   const RARITIES = ['L', 'UR', 'SR', 'R', 'PC', 'C'];
   const { pageFetch, sleep } = globalThis.WMFG;
