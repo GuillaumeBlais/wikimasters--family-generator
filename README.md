@@ -5,14 +5,6 @@ Code libre de réutilisation : prenez ce qui vous intéresse.
 
 Testé sur Firefox (Manifest V2). Aucune dépendance, aucun serveur tiers : tout tourne dans le navigateur.
 
-## Installation (Firefox)
-
-1. Télécharger le dépôt (Code → Download ZIP) et le dézipper.
-2. Ouvrir `about:debugging#/runtime/this-firefox` → **Charger un module temporaire…** → choisir `manifest.json`.
-3. Recharger WikiMasters (F5). Le bouton **＋ Famille** apparaît en bas à droite.
-
-Un module temporaire disparaît au redémarrage de Firefox ; pour une installation permanente, signer l'extension sur addons.mozilla.org (mode non listé).
-
 ## Fonctionnalités
 
 ### 1. Générer une famille depuis Wikipédia (bouton ＋ Famille)
@@ -37,6 +29,8 @@ Un module temporaire disparaît au redémarrage de Firefox ; pour une installati
 ### 3. Liste de souhaits du jeu
 - « Ajouter les manquantes » / « Ajouter toute la famille » → `POST /rest/v1/wishlist_items`.
 - Décompte réel de ce qui est déjà dans la liste (`GET wishlist_items?user_id=eq.…`), boutons masqués quand tout est fait.
+- Retrait des cartes déjà possédées (`user_cards` → `DELETE wishlist_items?card_id=in.(…)`) : automatique pour les cartes tirées
+  dans un paquet, ou en une fois pour toute la liste depuis le panneau ＋ Famille.
 
 ### 4. Étiquettes du jeu
 - Étiqueter en masse tous les exemplaires possédés d'une famille (étiquette existante ou nouvelle) :
@@ -78,7 +72,3 @@ Un module temporaire disparaît au redémarrage de Firefox ; pour une installati
   Les requêtes suivent un rythme variable (0,9–2,6 s, pauses régulières) et sont regroupées quand c'est possible.
 - Les endpoints `user_cards` et la lecture de `wishlist_items` / `tags` ont été déduits des requêtes du site
   (format PostgREST) et peuvent changer sans prévenir.
-
-## Licence
-
-MIT : libre de réutilisation, modification et redistribution.

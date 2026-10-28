@@ -1,7 +1,7 @@
 {
   "manifest_version": 2,
   "name": "WikiMasters – Générateur de familles",
-  "version": "1.8.2",
+  "version": "1.9.0",
   "description": "Thème → liste d'articles Wikipédia → code Famille pour l'extension WikiMastersTools-kzfamily.",
   "permissions": [
     "activeTab",

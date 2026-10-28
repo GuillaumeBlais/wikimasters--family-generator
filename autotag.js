@@ -161,6 +161,16 @@
     pending.clear();
     const cfg = settings();
 
+    if (globalThis.WMFG.wishPruneAuto()) {
+      try {
+        const r = await globalThis.WMFG.pruneWishlist(cards.map((c) => c.id));
+        if (r.removed.length) {
+          const names = cards.filter((c) => r.removed.includes(c.id)).map((c) => c.title);
+          toast(`♥ ${r.removed.length} carte${r.removed.length > 1 ? 's' : ''} retirée${r.removed.length > 1 ? 's' : ''} de ta liste de souhaits : ${names.join(', ')}`);
+        }
+      } catch (e) { log('liste de souhaits : nettoyage impossible', e.message); }
+    }
+
     try {
       if (!readSession()) throw new Error('session introuvable');
       const prices = await resolvePrices(cards);

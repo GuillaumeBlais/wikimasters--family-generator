@@ -585,6 +585,13 @@
         <input id="atName" maxlength="40">
         <p class="hint">Après chaque paquet, les cartes au-dessus du seuil reçoivent cette étiquette, seulement si l'exemplaire n'en a encore aucune. Nécessite le récap des prix de kzfamily.</p>
       </details>
+
+      <details class="box" id="wishBox">
+        <summary>Liste de souhaits</summary>
+        <label class="inline"><input type="checkbox" id="wpOn"> Retirer automatiquement les cartes tirées dans un paquet</label>
+        <div class="row"><button class="btn ghost" id="wpRun">Retirer toutes les cartes que je possède</button></div>
+        <div class="status" id="wpStatus"></div>
+      </details>
     </div>`;
   // Styles : feuille "constructible" (non bloquée par la CSP du site), sinon <style> classique
   let sheetOk = false;
@@ -620,7 +627,7 @@
     extra: $('extra'), exclude: $('exclude'), find: $('find'), status1: $('status1'), step2: $('step2'),
     source: $('source'), preview: $('preview'), count: $('count'), run: $('run'), progress: $('progress'), barfill: $('barfill'),
     status2: $('status2'), cancel: $('cancel'), result: $('result'), summary: $('summary'), code: $('code'),
-    copy: $('copy'), add: $('add'), dest: $('dest'), atOn: $('atOn'), atMin: $('atMin'), atName: $('atName'), missingBox: $('missingBox'), missingSum: $('missingSum'), missing: $('missing'),
+    copy: $('copy'), add: $('add'), dest: $('dest'), atOn: $('atOn'), wpOn: $('wpOn'), wpRun: $('wpRun'), wpStatus: $('wpStatus'), atMin: $('atMin'), atName: $('atName'), missingBox: $('missingBox'), missingSum: $('missingSum'), missing: $('missing'),
   };
 
   pin(el.fab, { position: 'fixed', right: '18px', bottom: '18px', 'z-index': '2147483000' });
@@ -655,6 +662,21 @@
   el.atOn.addEventListener('change', atSave);
   el.atMin.addEventListener('change', atSave);
   el.atName.addEventListener('change', atSave);
+
+  el.wpOn.checked = WMFG.wishPruneAuto();
+  el.wpOn.addEventListener('change', () => WMFG.setWishPruneAuto(el.wpOn.checked));
+  el.wpRun.addEventListener('click', async () => {
+    el.wpRun.disabled = true;
+    setStatus(el.wpStatus, 'Comparaison de ta liste de souhaits avec ta collection…');
+    try {
+      const r = await WMFG.pruneWishlist();
+      if (r.owned && !r.removed.length) setStatus(el.wpStatus, `${r.owned} carte(s) possédée(s) trouvée(s), mais le jeu a refusé la suppression.`, 'err');
+      else setStatus(el.wpStatus, `${r.removed.length} carte(s) retirée(s) · ${r.wishlist - r.removed.length} restent dans ta liste.`, 'ok');
+    } catch (e) {
+      setStatus(el.wpStatus, `Impossible : ${e.message || e}`, 'err');
+    }
+    el.wpRun.disabled = false;
+  });
 
   let sources = [];
   let titles = [];

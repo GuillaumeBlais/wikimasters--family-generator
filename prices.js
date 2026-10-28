@@ -164,6 +164,8 @@
   let wishLoading = false;
   const WISH_TTL = 5 * 60 * 1000;
 
+  window.addEventListener('wmfg-wishlist-changed', () => { wishLoadedAt = 0; loadWishlist(true); });
+
   async function loadWishlist(force = false) {
     if (wishLoading) return;
     if (!force && wishSet !== null && Date.now() - wishLoadedAt < WISH_TTL) return;

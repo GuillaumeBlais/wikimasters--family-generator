@@ -83,5 +83,46 @@
     return activePrefix;
   }
 
-  globalThis.WMFG = { sleep, PRICE_PREFIXES, pricePrefix, pageFetch, humanDelay, AVG_DELAY_MS, SB_URL, SB_ANON, UUID, readSession, sbHeaders };
+  // ----- Liste de souhaits : retirer les cartes déjà possédées -----
+  async function sbCall(method, path, extra = {}) {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const session = readSession();
+      if (!session) throw new Error('session introuvable');
+      const res = await pageFetch(`${SB_URL}/rest/v1/${path}`, { method, credentials: 'omit', headers: sbHeaders(session, extra) });
+      if (res.ok) return res.status === 204 ? [] : res.json().catch(() => []);
+      if (res.status === 401) { await sleep(5000); continue; }
+      if (res.status === 429 || res.status >= 500) { await sleep(10000 * (attempt + 1)); continue; }
+      throw new Error(`HTTP ${res.status}`);
+    }
+    throw new Error('Supabase ne répond pas');
+  }
+  // cardIds : limiter aux cartes données (ex. cartes d'un paquet) ; sans argument = toute la liste.
+  async function pruneWishlist(cardIds = null) {
+    const session = readSession();
+    if (!session) throw new Error('session introuvable');
+    const uid = session.userId;
+    const wish = new Set((await sbCall('GET', `wishlist_items?select=card_id&user_id=eq.${uid}&limit=10000`)).map((r) => r.card_id));
+    const candidates = [...wish].filter((id) => UUID.test(id) && (!cardIds || cardIds.includes(id)));
+    const owned = [];
+    for (let i = 0; i < candidates.length; i += 100) {
+      const chunk = candidates.slice(i, i + 100);
+      const rows = await sbCall('GET', `user_cards?select=card_id&user_id=eq.${uid}&card_id=in.(${chunk.join(',')})&limit=10000`);
+      for (const r of rows) if (!owned.includes(r.card_id)) owned.push(r.card_id);
+      if (i + 100 < candidates.length) await humanDelay();
+    }
+    const removed = [];
+    for (let i = 0; i < owned.length; i += 100) {
+      const chunk = owned.slice(i, i + 100);
+      const rows = await sbCall('DELETE', `wishlist_items?user_id=eq.${uid}&card_id=in.(${chunk.join(',')})&select=card_id`, { prefer: 'return=representation' });
+      removed.push(...(Array.isArray(rows) ? rows.map((r) => r.card_id) : []));
+      if (i + 100 < owned.length) await humanDelay();
+    }
+    if (removed.length) window.dispatchEvent(new CustomEvent('wmfg-wishlist-changed'));
+    return { wishlist: wish.size, owned: owned.length, removed };
+  }
+  const WP_KEY = 'wmfg_wishprune';
+  const wishPruneAuto = () => { try { return JSON.parse(localStorage.getItem(WP_KEY) || '{"enabled":true}').enabled !== false; } catch (_) { return true; } };
+  const setWishPruneAuto = (on) => { try { localStorage.setItem(WP_KEY, JSON.stringify({ enabled: Boolean(on) })); } catch (_) {} };
+
+  globalThis.WMFG = { pruneWishlist, wishPruneAuto, setWishPruneAuto, sleep, PRICE_PREFIXES, pricePrefix, pageFetch, humanDelay, AVG_DELAY_MS, SB_URL, SB_ANON, UUID, readSession, sbHeaders };
 })();
